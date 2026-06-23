@@ -4,7 +4,7 @@
 Este projeto prático implementa um sistema de processamento de pedidos altamente escalável e resiliente, construído 100% com serviços Serverless na AWS. A arquitetura é orientada a eventos (Event-Driven), garantindo o desacoplamento entre os microsserviços, processamento assíncrono e tolerância a falhas. 
 
 ## 🏗️ Arquitetura
-![Arquitetura da Solução](./arquitetura/01-arquitetura-completa.png)
+![Arquitetura da Solução](arquitetura/01-arquitetura-completa.png)
 
 ## 🛠️ Tecnologias e Serviços AWS Utilizados
 * **Amazon API Gateway:** Ponto de entrada RESTful para recebimento dos pedidos via requisições HTTP POST.
