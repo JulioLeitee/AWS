@@ -11,7 +11,12 @@ Resultados destacados
 Tecnologias em formato de cards/tabela
 Evidências organizadas como estudo de caso
 
+<<<<<<< HEAD
 Eu faria algo assim:
+=======
+## 🏗️ Arquitetura
+![Arquitetura da Solução](arquitetura/01-arquitetura-completa.png.png)
+>>>>>>> 69029eb81d959b36a81b318d473d5a3a50c57126
 
 Cabeçalho
 <div align="center">
@@ -37,6 +42,7 @@ Arquitetura logo no topo
 Sumário
 ## 📚 Sumário
 
+<<<<<<< HEAD
 - Visão Geral
 - Arquitetura
 - Tecnologias Utilizadas
@@ -186,3 +192,9 @@ Analista de Infraestrutura | Cloud Computing | AWS
 Foco em Arquiteturas Serverless, Automação, DevOps e Soluções Cloud Native.
 
 Uma melhoria que faz muita diferença: criar uma imagem/banner no Canva com o texto "AWS Serverless Order Processing System" e colocar no topo do README. Repositórios com banner, arquitetura e prints organizados parecem muito mais profissionais para recrutadores do que apenas texto e imagens soltas.
+=======
+## 💡 Habilidades Demonstradas
+* **Escalabilidade Global e Modelo Financeiro:** Infraestrutura que explora a elasticidade nativa das regiões AWS e alavanca o modelo financeiro *pay-as-you-go*, gerando processamento massivo sem custos de ociosidade.
+* **Governança e Protocolos de Segurança:** Aplicação estrita de roles do AWS IAM, concedendo permissões baseadas no princípio do menor privilégio entre os recursos (ex: Lambda apenas com acesso de escrita a filas específicas).
+* **Resistência a Falhas:** Prevenção de perda de dados e isolamento de falhas utilizando microsserviços desacoplados e gerenciamento de DLQs.
+>>>>>>> 69029eb81d959b36a81b318d473d5a3a50c57126
