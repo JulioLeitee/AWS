@@ -104,15 +104,15 @@ Resultado:
 
 ---
 
-# ⚙️ Etapa 3 — Pré-Validação com AWS Lambda
+# ⚙️ Etapa 3 — Pré-Validação com AWS Lambda 
 
-Foi desenvolvida uma função Lambda responsável pela validação inicial do payload recebido.
+Para atuar como uma camada de borda (edge validation) logo após o API Gateway, foi implementada a função `pre-validacao.py`. A escolha por uma Lambda aqui garante escalabilidade imediata para picos de requisições e evita custos desnecessários com mensagens inválidas trafegando na infraestrutura.
 
 Objetivos:
 
-* Garantir que os dados mínimos estejam presentes.
-* Evitar mensagens inválidas na fila.
-* Registrar logs para auditoria.
+* Garantir que os dados mínimos estruturais estejam presentes no payload.
+* Registrar logs no CloudWatch para auditoria.
+* Encaminhar a mensagem sanitizada para a fila SQS FIFO.
 
 Após validação, o pedido é enviado para uma fila FIFO.
 
@@ -140,7 +140,7 @@ Essa abordagem permite absorver picos de requisições sem impactar o restante d
 
 # ✅ Etapa 5 — Validação de Negócio
 
-Uma segunda função Lambda consome as mensagens da fila FIFO.
+Para processar as mensagens enfileiradas de forma assíncrona, foi desenvolvida a função `validacao-pedidos.py`. Separar essa validação da Lambda inicial segue o princípio de responsabilidade única (SRP), isolando as regras de negócio da camada de infraestrutura web.
 
 Responsabilidades:
 
@@ -174,15 +174,13 @@ Benefícios:
 
 # 🔄 Etapa 7 — Processamento Assíncrono dos Pedidos
 
-Os eventos roteados pelo EventBridge são enviados para uma fila de processamento.
+Nesta etapa, o roteamento do EventBridge aciona microsserviços especializados. A utilização de múltiplas funções Lambda isoladas foi escolhida para que o processamento, alteração e cancelamento escalem de forma independente.
 
-Uma Lambda especializada consome os eventos e executa a lógica principal da aplicação.
+Atividades realizadas pelos códigos:
 
-Atividades realizadas:
-
-* Processamento dos pedidos.
-* Atualização de status.
-* Persistência das informações.
+* `rocessa-pedidos.py`: Consome a fila principal, atualiza o status de novos pedidos e centraliza o core da aplicação.
+* `altera-pedido.py`: Acionada apenas para eventos de atualização, garantindo a consistência eventual dos dados alterados.
+* `altera-pedido.py`: Acionada apenas para eventos de atualização, garantindo a consistência eventual dos dados alterados.
 
 <p align="center">
   <img src="images/09-pedidos-pendentes.png" width="900">
@@ -198,7 +196,7 @@ Atividades realizadas:
 
 # 💾 Etapa 8 — Persistência com DynamoDB
 
-Os pedidos processados são armazenados em uma tabela DynamoDB.
+Os dados gerados pelas funções Lambda são persistidos em tabelas NoSQL do DynamoDB, garantindo leitura e gravação com latência de milissegundos.
 
 Campos armazenados:
 
@@ -216,7 +214,7 @@ Campos armazenados:
 
 # 📂 Etapa 9 — Processamento de Arquivos via Amazon S3
 
-Além da API, a solução também suporta processamento em lote através de arquivos JSON.
+A arquitetura também atende fluxos em lote (batch). Arquivos JSON com múltiplos pedidos são depositados em um bucket do Amazon S3, servindo como uma segunda porta de entrada para o sistema.
 
 Arquivos utilizados durante os testes:
 
@@ -232,13 +230,13 @@ Arquivos utilizados durante os testes:
 
 # 🔍 Etapa 10 — Validação de Arquivos
 
-Quando um arquivo é enviado ao bucket S3, uma Lambda é acionada automaticamente.
+Assim que um arquivo chega ao S3, um evento nativo dispara automaticamente a função `validacao-s3-arquivos.py`. Utilizar uma Lambda engatilhada pelo S3 elimina a necessidade de servidores monitorando o bucket ativamente (polling).
 
-Responsabilidades:
+Objetivos do código:
 
-* Validar schema.
-* Extrair pedidos.
-* Enviar mensagens para a fila principal.
+* Validar o schema estrutural do arquivo JSON.
+* Fazer a extração (parsing) de todos os pedidos contidos no lote.
+* Enviar cada pedido individualmente para a esteira principal do SQS, reaproveitando todo o fluxo já construído.
 
 <p align="center">
   <img src="images/13-validacao-arquivos.png" width="900">
@@ -248,7 +246,7 @@ Responsabilidades:
 
 # 📊 Etapa 11 — Histórico de Processamento
 
-Todas as execuções relacionadas ao processamento de arquivos são registradas em uma tabela DynamoDB específica para auditoria.
+Todas as execuções de arquivos via S3 são gravadas em uma tabela DynamoDB apartada, focada exclusivamente em auditoria e rastreabilidade de lotes.
 
 <p align="center">
   <img src="images/14-historico-arquivos.png" width="900">
@@ -258,7 +256,7 @@ Todas as execuções relacionadas ao processamento de arquivos são registradas 
 
 # 📧 Etapa 12 — Notificações com SNS
 
-Foi implementado um mecanismo de alerta utilizando Amazon SNS.
+Todas as execuções de arquivos via S3 são gravadas em uma tabela DynamoDB apartada, focada exclusivamente em auditoria e rastreabilidade de lotes.
 
 Sempre que um arquivo inválido é detectado:
 
@@ -279,7 +277,7 @@ Sempre que um arquivo inválido é detectado:
 
 # 🛡️ Etapa 13 — Tratamento de Falhas com DLQ
 
-Para aumentar a resiliência da solução foram implementadas Dead Letter Queues.
+Para garantir tolerância a falhas, foram implementadas Dead Letter Queues (DLQ) no SQS. Se alguma função Lambda (como a `processa-pedidos.py`ou `validacao-s3-arquivos.py`) falhar repetidamente ao tentar processar um evento, a mensagem é movida para a DLQ. Isso evita a perda de dados e permite a análise e o reprocessamento manual posterior.
 
 Objetivos:
 
